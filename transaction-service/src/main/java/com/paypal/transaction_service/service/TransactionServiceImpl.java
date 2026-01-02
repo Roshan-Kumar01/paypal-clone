@@ -56,9 +56,9 @@ public class TransactionServiceImpl implements TransactionService{
            */
              String key = String.valueOf(saved.getId());
              kafkaEventProducer.sendTransactionEvent(key, saved); 
-             System.out.println("🚀 Kafka message sent");
+             System.out.println(".................................🚀 Kafka message sent..........................................");
         } catch (Exception e) {
-             System.err.println("❌ Failed to send Kafka event: " + e.getMessage());
+             System.err.println("........................................❌ Failed to send Kafka event: ............................" + e.getMessage());
              e.printStackTrace();
         }
         return saved;
