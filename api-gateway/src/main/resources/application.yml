@@ -1,0 +1,115 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway-service
+
+  kafka:
+    bootstrap-servers: kafka:9092
+
+  data:
+    redis:
+      host: redis-stack
+      port: 6379
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+      routes:
+
+        # ================= USER SERVICE =================
+        # Auth endpoints (NO rate limit)
+        - id: user-service-auth
+          uri: http://localhost:8081
+          predicates:
+            - Path=/auth/**
+
+        # User APIs
+        - id: user-service-api
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/users/**
+
+        # ================= WALLET SERVICE =================
+        - id: wallet-service
+          uri: http://localhost:8088
+          predicates:
+            - Path=/api/wallets/**
+
+        # ================= TRANSACTION SERVICE =================
+        - id: transaction-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/transactions/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+
+        # ================= REWARD SERVICE =================
+        - id: reward-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/rewards/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+
+        # ================= NOTIFICATION SERVICE =================
+        - id: notification-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+
+    httpclient:
+      max-initial-line-length: 4096
+      max-header-size: 8192
+
+# ================= RESILIENCE4J (NOT USED BY GATEWAY) =================
+# Keep only if used inside microservices (Controller / Service level)
+resilience4j:
+  ratelimiter:
+    instances:
+      transaction_service:
+        limit-for-period: 10
+        limit-refresh-period: 1s
+        timeout-duration: 0
+        register-health-indicator: true
+
+      reward_service:
+        limit-for-period: 10
+        limit-refresh-period: 1s
+        timeout-duration: 0
+        register-health-indicator: true
+
+      notification_service:
+        limit-for-period: 10
+        limit-refresh-period: 1s
+        timeout-duration: 0
+        register-health-indicator: true
+
+# ================= LOGGING =================
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: DEBUG
