@@ -19,7 +19,7 @@ import com.paypal.user_service.service.UserService;
 public class UserController {
    
     private UserService userService;
-    UserController(UserService userService){
+    public UserController(UserService userService){
         this.userService=userService;
     }
 
