@@ -20,7 +20,6 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
                 );
-
         return http.build();
     }
     @Bean
