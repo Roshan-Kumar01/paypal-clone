@@ -8,14 +8,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paypal.transaction_service.entity.Transaction;
 import com.paypal.transaction_service.kafka.KafkaEventProducer;
 import com.paypal.transaction_service.repository.TransactionRepository;
 
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
-
-import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
@@ -210,5 +209,10 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public List<Transaction> getTransactionsByUser(Long userId) {
         return repository.findBySenderIdOrReceiverId(userId, userId);
+    }
+
+    @Override
+    public List<Transaction> getAllTransactions() {
+        return repository.findAll();
     }
 }
